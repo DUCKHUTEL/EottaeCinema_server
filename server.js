@@ -17,7 +17,7 @@ const connectDb = mysql.createPool({
   ,connectionLimit: 10
 })
 app.get("/",(req,res)=> {
-    res.send("jiji")
+    res.send("데모 서버 입니다.")
 });
 
 app.listen(port,()=>{
