@@ -24,7 +24,7 @@ app.get("/",(req,res)=> {
 app.get("/movies",async(req,res)=> {
   try{
     const query = `select * from heroku_18c5f24897f4cf6.moivesinfo`
-    const moviesInfo = await connectDb.query(query);
+    const moviesInfo = await connectDb.query(query)[0];
     res.send(moviesInfo);
   }catch(e){
     console.log(e)
