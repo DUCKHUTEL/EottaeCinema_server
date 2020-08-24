@@ -16,8 +16,19 @@ const connectDb = mysql.createPool({
   ,database : "heroku_18c5f24897f4cf6"
   ,connectionLimit: 10
 })
+
 app.get("/",(req,res)=> {
     res.send("데모 서버 입니다.")
+});
+
+app.get("/movies",async(req,res)=> {
+  try{
+    const query = `select * from heroku_18c5f24897f4cf6.moivesinfo`
+    const moviesInfo = await connectDb.query(query);
+    res.send(moviesInfo);
+  }catch(e){
+    console.log(e)
+  }
 });
 
 app.listen(port,()=>{
