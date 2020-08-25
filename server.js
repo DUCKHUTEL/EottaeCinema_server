@@ -25,7 +25,41 @@ app.get("/movies",async(req,res)=> {
   try{
     const query = `select * from heroku_18c5f24897f4cf6.moivesinfo`
     const moviesInfo = await connectDb.query(query);
+    res.send(moviesInfo[0]);
+  }catch(e){
+    console.log(e)
+  }
+});
+
+app.get("/theater",async(req,res)=> {
+  try{
+    const query = `select * from heroku_18c5f24897f4cf6.location`
+    const moviesInfo = await connectDb.query(query);
     console.log(moviesInfo[0]);
+    res.send(moviesInfo[0]);
+  }catch(e){
+    console.log(e)
+  }
+});
+
+app.get("/bookMovieData",async(req,res)=> {
+  const {date,title,point} = req.query
+  title ? title="t2.movieTitle":title;
+  try{
+    const query = `SELECT t1.locationName, t2.*
+    FROM location t1, theaters t2
+    WHERE t1.point = t2.theaterLocation 
+    and t2.movieTitle=${title}
+    and t2.moviedate=${date}  
+    and t2.theaterLocation=${point}
+    order by t1.locationId asc, t2.theaterLocation asc
+    ;`
+    console.log(query);
+    const moviesInfo = await connectDb.query(query);
+    console.log(moviesInfo[0])
+    // console.log(moviesInfo[0].map(data => ({
+    //   [data.locationName]:data.theaterLocation
+    // })))
     res.send(moviesInfo[0]);
   }catch(e){
     console.log(e)
