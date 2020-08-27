@@ -12,6 +12,15 @@ app.use(express.static('public'));
 app.use(express.urlencoded({extended:true}));
 app.use(express.json());
 
+app.use(function(req, res, next) {
+  res.header("Access-Control-Allow-Origin", '*');
+  res.header("Access-Control-Allow-Credentials", true);
+  res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
+  res.header("Access-Control-Allow-Headers", 'Origin,X-Requested-With,Content-Type,Accept,content-type,application/json');
+  next();
+});
+
+
 let port = process.env.PORT || 9000;
 const mysql = require("mysql2/promise");
 const connectDb = mysql.createPool({
@@ -22,6 +31,7 @@ const connectDb = mysql.createPool({
   ,database : "heroku_18c5f24897f4cf6"
   ,connectionLimit: 10
 })
+
 
 app.get("/",(req,res)=> {
   
