@@ -44,11 +44,14 @@ app.get("/theater",async(req,res)=> {
 
 app.get("/bookMovieData",async(req,res)=> {
   const {date,title,point} = req.query
-  title ? title="t2.movieTitle":title;
+  title === "" ? title="t2.movieTitle":title;
+  point === "" ? point="t2.theaterLocation":point;
   try{
-    const query = `SELECT t1.locationName, t2.*
-    FROM location t1, theaters t2
+    const query = 
+    `SELECT t1.locationName, t2.*, t3.ageCut
+    FROM location t1, theaters t2, moivesinfo t3
     WHERE t1.point = t2.theaterLocation 
+    and t2.movieTitle = t3.movieTitle
     and t2.movieTitle=${title}
     and t2.moviedate=${date}  
     and t2.theaterLocation=${point}
@@ -57,9 +60,6 @@ app.get("/bookMovieData",async(req,res)=> {
     console.log(query);
     const moviesInfo = await connectDb.query(query);
     console.log(moviesInfo[0])
-    // console.log(moviesInfo[0].map(data => ({
-    //   [data.locationName]:data.theaterLocation
-    // })))
     res.send(moviesInfo[0]);
   }catch(e){
     console.log(e)
