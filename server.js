@@ -52,7 +52,6 @@ app.get("/theater",async(req,res)=> {
   try{
     const query = `select * from heroku_18c5f24897f4cf6.location`
     const moviesInfo = await connectDb.query(query);
-    console.log(moviesInfo[0]);
     res.send(moviesInfo[0]);
   }catch(e){
     console.log(e)
@@ -61,24 +60,26 @@ app.get("/theater",async(req,res)=> {
 
 app.get("/bookMovieData",async(req,res)=> {
   const {date,title,point} = req.query
-  title === "" ? title="t2.movieTitle":title;
-  point === "" ? point="t2.theaterLocation":point;
+
+  const defineTitle = title === "없음" ? "t2.movieTitle" : `"${title}"`
+  const definePonit = point === "없음" ? "t2.theaterLocation" : `"${point}"`
+
   try{
     const query = 
     `SELECT t1.locationName, t2.*, t3.ageCut
     FROM location t1, theaters t2, moivesinfo t3
     WHERE t1.point = t2.theaterLocation 
     and t2.movieTitle = t3.movieTitle
-    and t2.movieTitle=${title}
-    and t2.moviedate=${date}  
-    and t2.theaterLocation=${point}
+    and t2.movieTitle=${defineTitle}
+    and t2.moviedate="${date}"
+    and t2.theaterLocation=${definePonit}
     order by t1.locationId asc, t2.theaterLocation asc
     ;`
     console.log(query);
     const moviesInfo = await connectDb.query(query);
-    console.log(moviesInfo[0])
     res.send(moviesInfo[0]);
   }catch(e){
+    res.send(e);
     console.log(e)
   }
 });
