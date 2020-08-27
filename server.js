@@ -1,7 +1,13 @@
 const express = require("express");
 const app = express();
 const cors = require('cors');
-app.use(cors());
+ 
+const corsOptions = {
+  origin: 'http://localhost:3000', // 허락하고자 하는 요청 주소
+  credentials: true, // true로 하면 설정한 내용을 response 헤더에 추가 해줍니다.
+};
+
+app.use(cors(corsOptions));
 app.use(express.static('public'));
 app.use(express.urlencoded({extended:true}));
 app.use(express.json());
@@ -18,6 +24,7 @@ const connectDb = mysql.createPool({
 })
 
 app.get("/",(req,res)=> {
+  
     res.send("데모 서버 입니다.")
 });
 
