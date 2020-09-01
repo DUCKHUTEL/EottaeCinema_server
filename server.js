@@ -61,8 +61,8 @@ app.get("/theater",async(req,res)=> {
 app.get("/bookMovieData",async(req,res)=> {
   const {date,title,point} = req.query
 
-  const defineTitle = title === "없음" ? "t2.movieTitle" : `"${title}"`
-  const definePonit = point === "없음" ? "t2.theaterLocation" : `"${point}"`
+  // const defineTitle = title === "없음" ? "t2.movieTitle" : `"${title}"`
+  // const definePonit = point === "없음" ? "t2.theaterLocation" : `"${point}"`
 
   try{
     const query = 
