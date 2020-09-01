@@ -61,7 +61,7 @@ app.get("/theater",async(req,res)=> {
 app.get("/bookMovieData",async(req,res)=> {
   const {date,title,point} = req.query
 
-  const defineTitle = title === "없음" ? `""` : `"${title}"`
+  const defineTitle = title === "없음" ? "t2.movieTitle" : `"${title}"`
   const definePonit = point === "없음" ? `""` : `"${point}"`
 
   try{
@@ -75,12 +75,10 @@ app.get("/bookMovieData",async(req,res)=> {
     and t2.theaterLocation=${definePonit}
     order by t1.locationId asc, t2.theaterLocation asc
     ;`
-    console.log(query);
     const moviesInfo = await connectDb.query(query);
     res.send(moviesInfo[0]);
   }catch(e){
     res.send(e);
-    console.log(e)
   }
 });
 
