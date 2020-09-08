@@ -34,7 +34,6 @@ const connectDb = mysql.createPool({
 
 
 app.get("/",(req,res)=> {
-  
     res.send("데모 서버 입니다.")
 });
 
@@ -60,10 +59,8 @@ app.get("/theater",async(req,res)=> {
 
 app.get("/bookMovieData",async(req,res)=> {
   const {date,title,point} = req.query
-
   const defineTitle = title === "없음" ? "t2.movieTitle" : `"${title}"`
-  const definePonit = point === "없음" ? `""` : `"${point}"`
-
+  const definePonit = point === "없음" ? `""` : "전체"? "t2.theaterLocation":`"${point}"`
   try{
     const query = 
     `SELECT t1.locationName, t2.*, t3.ageCut
