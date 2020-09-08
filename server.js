@@ -59,19 +59,26 @@ app.get("/theater",async(req,res)=> {
 
 app.get("/bookMovieData",async(req,res)=> {
   const {date,title,point} = req.query
-  const defineTitle = title === "없음" ? "t2.movieTitle" : `"${title}"`
-  const definePonit = point === "없음" ? `""` : "전체"? "t2.theaterLocation":`"${point}"`
+  
+  const defineTitle = title === "없음" ? "t2.movieTitle" : `${title}`
+
+  const definePonit = point === "없음" ? `""` : "전체"? "t2.theaterLocation":`${point}`
+  
+  console.log(defineTitle, definePonit);
+  
   try{
     const query = 
     `SELECT t1.locationName, t2.*, t3.ageCut
     FROM location t1, theaters t2, moivesinfo t3
     WHERE t1.point = t2.theaterLocation 
     and t2.movieTitle = t3.movieTitle
-    and t2.movieTitle=${defineTitle}
-    and t2.moviedate="${date}"
-    and t2.theaterLocation=${definePonit}
+    and t2.movieTitle=${title}
+    and t2.moviedate=${date}
+    and t2.theaterLocation=${point}
     order by t1.locationId asc, t2.theaterLocation asc
     ;`
+  console.log(query)
+
     const moviesInfo = await connectDb.query(query);
     res.send(moviesInfo[0]);
   }catch(e){
