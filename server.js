@@ -61,6 +61,7 @@ app.get("/bookMovieData",async(req,res)=> {
   const {date,title,point} = req.query
   const defineTitle = title === "없음" ? "t2.movieTitle" : `"${title}"`
   const definePonit = point === "없음" ? `""` : `"${point}"`
+  const allPoint = "t2.theaterLocation"
   try{
     const query = 
     `SELECT t1.locationName, t2.*, t3.ageCut
@@ -69,7 +70,7 @@ app.get("/bookMovieData",async(req,res)=> {
     and t2.movieTitle = t3.movieTitle
     and t2.movieTitle=${defineTitle}
     and t2.moviedate="${date}"
-    and t2.theaterLocation=${definePonit}
+    and t2.theaterLocation=${point==="전체"?allPoint:definePonit}
     order by t1.locationId asc, t2.theaterLocation asc
     ;`
     const moviesInfo = await connectDb.query(query);
