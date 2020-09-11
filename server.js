@@ -1,16 +1,16 @@
 const express = require("express");
 const app = express();
+const bodyParser = require("body-parser");
+const jwt = require("jsonwebtoken");
+const config = require("./config/auth.config")
 // const cors = require('cors');
- 
-// const corsOptions = {
-//   origin: 'http://localhost:3000', // 허락하고자 하는 요청 주소
-//   credentials: true, // true로 하면 설정한 내용을 response 헤더에 추가 해줍니다.
-// };
+// app.use(cors());
 
-// app.use(cors(corsOptions));
 app.use(express.static('public'));
 app.use(express.urlencoded({extended:true}));
 app.use(express.json());
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
 
 app.use(function(req, res, next) {
   res.header("Access-Control-Allow-Origin", '*');
@@ -20,9 +20,11 @@ app.use(function(req, res, next) {
   next();
 });
 
-
 let port = process.env.PORT || 9000;
+
 const mysql = require("mysql2/promise");
+const { connect } = require("mysql2");
+
 const connectDb = mysql.createPool({
   host: "us-cdbr-east-02.cleardb.com"
   ,port: 3306
@@ -31,7 +33,6 @@ const connectDb = mysql.createPool({
   ,database : "heroku_18c5f24897f4cf6"
   ,connectionLimit: 10
 })
-
 
 app.get("/",(req,res)=> {
     res.send("데모 서버 입니다.")
@@ -44,6 +45,8 @@ app.get("/movies",async(req,res)=> {
     res.send(moviesInfo[0]);
   }catch(e){
     console.log(e)
+    res.send(e);
+
   }
 });
 
@@ -54,6 +57,8 @@ app.get("/theater",async(req,res)=> {
     res.send(moviesInfo[0]);
   }catch(e){
     console.log(e)
+    res.send(e);
+
   }
 });
 
@@ -79,6 +84,98 @@ app.get("/bookMovieData",async(req,res)=> {
     res.send(e);
   }
 });
+
+app.get("/checkRedunId",async(req,res)=>{
+  const {id} = req.query;
+  try{
+    const query = `SELECT id from heroku_18c5f24897f4cf6.user where id = "${id}";`
+    const checkIdres = await connectDb.query(query);
+    const canUseId = checkIdres[0].length === 0 ? true:false
+    res.send(canUseId);
+  }catch(e){
+    res.send(e)
+  }
+});
+
+app.get("/checkRedunNickName",async(req,res)=>{
+  const {nickName} = req.query;
+  try{
+    const query = `SELECT nickname from heroku_18c5f24897f4cf6.user where nickname = "${nickName}";`
+    const checkIdres = await connectDb.query(query);
+    const canUseNickName = checkIdres[0].length === 0 ? true:false
+    res.send(canUseNickName);
+  }catch(e){
+    res.send(e)
+    console.log(e)
+  }
+});
+
+app.post("/signUp",async(req,res)=>{
+  try{
+    const {id,password,nickName} = req.body;
+    const query = `INSERT INTO heroku_18c5f24897f4cf6.user values("${nickName}","${password}","${id}");`;
+    const postres =  await connectDb.query(query);
+    res.send({status:true});
+  }catch(e){
+    res.send(e);
+  }
+});
+
+app.post("/signIn",async(req,res)=>{
+  try{
+    const {id,password} = req.body;
+    const query = `select * from heroku_18c5f24897f4cf6.user where id="${id}" and password="${password}"`;
+    const findIdData = await connectDb.query(query);
+    console.log(findIdData[0][0])
+    if(findIdData[0].length === 0){
+      res.send({loginStatus:false})
+      return
+    }          
+    const token = jwt.sign({id:findIdData[0].id},config.secret,{
+      expiresIn:86400
+    });
+    res.send({
+      nickName:findIdData[0][0].nickName,
+      accessToken:token
+    })
+  }catch(e){
+    res.send(e)
+  }
+});
+
+app.post("/book",async(req,res)=>{
+  // 토큰 존재확인
+  if(!req.headers.authorization){
+    return res.send({message:"no token"})
+  };
+  // 토큰 유효성 검사
+  const reqToken = req.headers.authorization.slice(7);
+  jwt.verify(reqToken,config.secret,(err,decoded)=>{
+    if(err){
+      return res.send({
+        message: "Unauthorized!"
+      });
+    }
+    console.log(decoded);
+  })
+  // 예매 정보 추가
+  try{
+    const {nickName, bookId, bookedSeat, selectedSeat} = req.body;
+    const bookQuery = `insert into booktable values(null,"${nickName}",${bookId},'${selectedSeat}',now());`;
+    const finishBook = await connectDb.query(bookQuery);
+    // 기존 정보에 좌석 정보 추가하기
+
+    const newBookedSeatCnt = bookedSeat.split(";").length;
+    const updateQuery = `update heroku_18c5f24897f4cf6.theaters set bookedSeat=${bookedSeat},
+    bookedSeatCnt=${newBookedSeatCnt} where bookId = ${bookId}`
+    const update = await connectDb.query(updateQuery);
+
+    res.send(update[0])
+  }catch(e){
+    console.log(e);
+    res.send(e)
+  }
+})
 
 app.listen(port,()=>{
     console.log(`app on ${port}`)
