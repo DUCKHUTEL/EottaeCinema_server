@@ -23,7 +23,6 @@ app.use(function(req, res, next) {
 let port = process.env.PORT || 9000;
 
 const mysql = require("mysql2/promise");
-const { connect } = require("mysql2");
 
 const connectDb = mysql.createPool({
   host: "us-cdbr-east-02.cleardb.com"
@@ -37,10 +36,10 @@ const connectDb = mysql.createPool({
 app.get("/",(req,res)=> {
     res.send("데모 서버 입니다.")
 });
-
+// 영화
 app.get("/movies",async(req,res)=> {
   try{
-    const query = `select * from heroku_18c5f24897f4cf6.moivesinfo`
+    const query = `select * from heroku_18c5f24897f4cf6.moivesinfo;`
     const moviesInfo = await connectDb.query(query);
     res.send(moviesInfo[0]);
   }catch(e){
@@ -49,10 +48,10 @@ app.get("/movies",async(req,res)=> {
 
   }
 });
-
+// 영화관
 app.get("/theater",async(req,res)=> {
   try{
-    const query = `select * from heroku_18c5f24897f4cf6.location`
+    const query = `select * from heroku_18c5f24897f4cf6.location;`
     const moviesInfo = await connectDb.query(query);
     res.send(moviesInfo[0]);
   }catch(e){
@@ -61,7 +60,7 @@ app.get("/theater",async(req,res)=> {
 
   }
 });
-
+// 예매 데이터
 app.get("/bookMovieData",async(req,res)=> {
   const {date,title,point} = req.query
   const defineTitle = title === "없음" ? "t2.movieTitle" : `"${title}"`
@@ -84,7 +83,7 @@ app.get("/bookMovieData",async(req,res)=> {
     res.send(e);
   }
 });
-
+// 로그인
 app.get("/checkRedunId",async(req,res)=>{
   const {id} = req.query;
   try{
@@ -124,9 +123,9 @@ app.post("/signUp",async(req,res)=>{
 app.post("/signIn",async(req,res)=>{
   try{
     const {id,password} = req.body;
-    const query = `select * from heroku_18c5f24897f4cf6.user where id="${id}" and password="${password}"`;
+    const query = `select * from heroku_18c5f24897f4cf6.user where id="${id}" and password="${password}";`;
     const findIdData = await connectDb.query(query);
-    console.log(findIdData[0][0])
+
     if(findIdData[0].length === 0){
       res.send({loginStatus:false})
       return
@@ -142,7 +141,7 @@ app.post("/signIn",async(req,res)=>{
     res.send(e)
   }
 });
-
+// 예매하기
 app.post("/book",async(req,res)=>{
   // 토큰 존재확인
   if(!req.headers.authorization){
@@ -175,6 +174,77 @@ app.post("/book",async(req,res)=>{
     console.log(e);
     res.send(e)
   }
+})
+// 관람평 최신으로 가져오기
+app.get("/boardOnTime",async(req,res)=>{
+  const {movie,count} = req.query;
+  try{
+    const query = `SELECT * FROM heroku_18c5f24897f4cf6.debate where movie = '${movie}' order by created_at DESC limit ${count*10};`;
+    const getBoard = await connectDb.query(query);
+    res.send(getBoard[0])
+  }catch(e){
+    res.send(e)
+  }
+});
+// 관람평 공감으로 가져오기
+app.get("/boardOnFavor",async(req,res)=>{
+  const {movie,count} = req.query;
+  try{
+    const query = `SELECT * FROM heroku_18c5f24897f4cf6.debate where movie = '${movie}' order by favorit DESC limit ${count*10};`;
+    const getBoard = await connectDb.query(query);
+    res.send(getBoard[0])
+  }catch(e){
+    res.send(e)
+  }
+});
+
+//관람평 쓰기
+app.post("/appBoard",async (req,res)=> {
+  // 토큰 존재 확인
+  if(!req.headers.authorization){
+    return res.send({message:"no token"})
+  };
+  // 토큰 유효성 검사
+  const reqToken = req.headers.authorization.slice(7);
+  
+  jwt.verify(reqToken,config.secret,(err,decoded)=>{
+    if(err){
+      return res.send({
+        message: "Unauthorized!"
+      });
+    }
+    console.log(decoded);
+  });
+
+  const {movie,starPoint,content,nickName} = req.body;
+  try{
+    const query = `insert into heroku_18c5f24897f4cf6.debate values(null,'${movie}',${starPoint},'${content}','${nickName}',0,now(),null);`
+    const postBoard = await connectDb.query(query);
+    res.send({update:true});
+  }catch(e){
+    res.send(e)
+  }
+})
+
+// 종아요 누르기
+app.post("/like",async (req,res)=> {
+  // 토큰 존재 확인
+  if(!req.headers.authorization){
+    return res.send({message:"no token"})
+  };
+  // 토큰 유효성 검사
+  const reqToken = req.headers.authorization.slice(7);
+  jwt.verify(reqToken,config.secret,(err,decoded)=>{
+    if(err){
+      return res.send({
+        message: "Unauthorized!"
+      });
+    }
+    console.log(decoded);
+  });
+  // 누르기 기능
+  const {id} = req.body;
+  const query = `update heroku_18c5f24897f4cf6.debate set favorit= favorit+1 where id = ${id}`
 })
 
 app.listen(port,()=>{
