@@ -243,6 +243,7 @@ app.post("/like",async (req,res)=> {
     console.log(decoded);
   });
   // 누르기 기능
+  
   const {id} = req.body;
   const query = `update heroku_18c5f24897f4cf6.debate set favorit= favorit+1 where id = ${id}`
 })
