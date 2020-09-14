@@ -32,7 +32,7 @@ function checkToekn(token){
   jwt.verify(reqToken,config.secret,(err,decoded)=>{
     if(err){
       return res.send({
-        message: "Unauthorized!"
+        tokenState: false
       });
     }
     console.log(decoded);
@@ -53,6 +53,11 @@ const connectDb = mysql.createPool({
 app.get("/",(req,res)=> {
     res.send("데모 서버 입니다.")
 });
+// 최초 토큰 체크
+app.get("/checkToken", async(req,res)=> {
+  checkToekn(req.headers.authorization);
+  res.send({tokenState:true})
+})
 // 영화
 app.get("/movies",async(req,res)=> {
   try{
@@ -151,9 +156,10 @@ app.post("/signIn",async(req,res)=>{
       res.send({loginStatus:false})
       return
     }          
-    const token = jwt.sign({id:findIdData[0].id},config.secret,{
+    const token = jwt.sign({nickName:findIdData[0][0].nickName},config.secret,{
       expiresIn:86400
     });
+    console.log("1")
     return res.send({
       nickName:findIdData[0][0].nickName,
       accessToken:token
