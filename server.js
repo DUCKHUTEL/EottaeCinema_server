@@ -22,6 +22,23 @@ app.use(function(req, res, next) {
 
 let port = process.env.PORT || 9000;
 
+function checkToekn(token){
+  if(!token){
+    return res.send({message:"no token"})
+  };
+  // 토큰 유효성 검사
+  const reqToken = token.slice(7);
+  
+  jwt.verify(reqToken,config.secret,(err,decoded)=>{
+    if(err){
+      return res.send({
+        message: "Unauthorized!"
+      });
+    }
+    console.log(decoded);
+  });
+}
+
 const mysql = require("mysql2/promise");
 
 const connectDb = mysql.createPool({
@@ -148,20 +165,7 @@ app.post("/signIn",async(req,res)=>{
 });
 // 예매하기
 app.post("/book",async(req,res)=>{
-  // 토큰 존재확인
-  if(!req.headers.authorization){
-    return res.send({message:"no token"})
-  };
-  // 토큰 유효성 검사
-  const reqToken = req.headers.authorization.slice(7);
-  jwt.verify(reqToken,config.secret,(err,decoded)=>{
-    if(err){
-      return res.send({
-        message: "Unauthorized!"
-      });
-    }
-    console.log(decoded);
-  })
+  checkToekn(req.headers.authorization);
   // 예매 정보 추가
   try{
     const {nickName, bookId, bookedSeat, selectedSeat} = req.body;
@@ -208,22 +212,7 @@ app.get("/boardOnFavor",async(req,res)=>{
 
 //관람평 쓰기
 app.post("/appBoard",async (req,res)=> {
-  // 토큰 존재 확인
-  if(!req.headers.authorization){
-    return res.send({message:"no token"})
-  };
-  // 토큰 유효성 검사
-  const reqToken = req.headers.authorization.slice(7);
-  
-  jwt.verify(reqToken,config.secret,(err,decoded)=>{
-    if(err){
-      return res.send({
-        message: "Unauthorized!"
-      });
-    }
-    console.log(decoded);
-  });
-
+  checkToekn(req.headers.authorization);
   const {movie,starPoint,content,nickName} = req.body;
   try{
     const query = `insert into heroku_18c5f24897f4cf6.debate values(null,'${movie}',${starPoint},'${content}','${nickName}',0,now(),null,"");`
@@ -233,24 +222,11 @@ app.post("/appBoard",async (req,res)=> {
     res.send(e);
     return
   }
-})
+});
 
 // 종아요 누르기
 app.post("/like",async (req,res)=> {
-  // 토큰 존재 확인
-  if(!req.headers.authorization){
-    return res.send({message:"no token"})
-  };
-  // 토큰 유효성 검사
-  const reqToken = req.headers.authorization.slice(7);
-  jwt.verify(reqToken,config.secret,(err,decoded)=>{
-    if(err){
-      return res.send({
-        message: "Unauthorized!"
-      });
-    }
-    console.log(decoded);
-  });
+  checkToekn(req.headers.authorization);
   // 누르기 기능
   const {id, status,whoLikeThis} = req.body;
   try{
@@ -267,7 +243,36 @@ app.post("/like",async (req,res)=> {
     res.send(e)
   }
 })
+// 게시판 수정
+app.patch("/patchBoard",async (req,res)=> {
+  checkToekn(req.headers.authorization); 
+  const {id,starPoint,content} = req.body;
+  try{
+    const query = `update heroku_18c5f24897f4cf6.debate 
+			set content='${content}'star=${starPoint} where id = ${id};`
+    await connectDb.query(query);
+    return res.send({update:true});
+  }catch(e){
+    res.send(e);
+    return
+  }
+})
+// 게시판 삭제
+app.delete("/deleteBoard",async (req,res)=> {
+  
+  checkToekn(req.headers.authorization);
+
+  const {id} = req.body;
+  try{
+		const query = `delete from heroku_18c5f24897f4cf6.debate where id=${id}`;
+		await connectDb.query(query);
+		res.send({update:true});
+  }catch(e){
+    res.send(e)
+  }
+})
 
 app.listen(port,()=>{
     console.log(`app on ${port}`)
-})
+});
+
