@@ -41,11 +41,11 @@ app.get("/movies",async(req,res)=> {
   try{
     const query = `select * from heroku_18c5f24897f4cf6.moivesinfo;`
     const moviesInfo = await connectDb.query(query);
-    res.send(moviesInfo[0]);
+    return res.send(moviesInfo[0]);
   }catch(e){
     console.log(e)
     res.send(e);
-
+    return
   }
 });
 // 영화관
@@ -53,11 +53,11 @@ app.get("/theater",async(req,res)=> {
   try{
     const query = `select * from heroku_18c5f24897f4cf6.location;`
     const moviesInfo = await connectDb.query(query);
-    res.send(moviesInfo[0]);
+    return res.send(moviesInfo[0]);
   }catch(e){
     console.log(e)
     res.send(e);
-
+    return
   }
 });
 // 예매 데이터
@@ -78,48 +78,52 @@ app.get("/bookMovieData",async(req,res)=> {
     order by t1.locationId asc, t2.theaterLocation asc
     ;`
     const moviesInfo = await connectDb.query(query);
-    res.send(moviesInfo[0]);
+    return res.send(moviesInfo[0]);
   }catch(e){
-    res.send(e);
+    return res.send(e);
   }
 });
-// 로그인
+
+//회원가입시 아이디 중복체크
 app.get("/checkRedunId",async(req,res)=>{
   const {id} = req.query;
   try{
     const query = `SELECT id from heroku_18c5f24897f4cf6.user where id = "${id}";`
     const checkIdres = await connectDb.query(query);
     const canUseId = checkIdres[0].length === 0 ? true:false
-    res.send(canUseId);
+    return res.send(canUseId);
   }catch(e){
-    res.send(e)
+    res.send(e);
+    return
   }
 });
-
+// 닉네임 중복 체크
 app.get("/checkRedunNickName",async(req,res)=>{
   const {nickName} = req.query;
   try{
     const query = `SELECT nickname from heroku_18c5f24897f4cf6.user where nickname = "${nickName}";`
     const checkIdres = await connectDb.query(query);
     const canUseNickName = checkIdres[0].length === 0 ? true:false
-    res.send(canUseNickName);
+    return res.send(canUseNickName);
   }catch(e){
     res.send(e)
     console.log(e)
+    return
   }
 });
-
+// 추가하기
 app.post("/signUp",async(req,res)=>{
   try{
     const {id,password,nickName} = req.body;
     const query = `INSERT INTO heroku_18c5f24897f4cf6.user values("${nickName}","${password}","${id}");`;
-    const postres =  await connectDb.query(query);
-    res.send({status:true});
+    await connectDb.query(query);
+    return res.send({status:true});
   }catch(e){
     res.send(e);
+    return
   }
 });
-
+// 로그인
 app.post("/signIn",async(req,res)=>{
   try{
     const {id,password} = req.body;
@@ -133,12 +137,13 @@ app.post("/signIn",async(req,res)=>{
     const token = jwt.sign({id:findIdData[0].id},config.secret,{
       expiresIn:86400
     });
-    res.send({
+    return res.send({
       nickName:findIdData[0][0].nickName,
       accessToken:token
     })
   }catch(e){
     res.send(e)
+    return
   }
 });
 // 예매하기
@@ -161,7 +166,7 @@ app.post("/book",async(req,res)=>{
   try{
     const {nickName, bookId, bookedSeat, selectedSeat} = req.body;
     const bookQuery = `insert into booktable values(null,"${nickName}",${bookId},'${selectedSeat}',now());`;
-    const finishBook = await connectDb.query(bookQuery);
+    await connectDb.query(bookQuery);
     // 기존 정보에 좌석 정보 추가하기
 
     const newBookedSeatCnt = bookedSeat.split(";").length;
@@ -169,10 +174,11 @@ app.post("/book",async(req,res)=>{
     bookedSeatCnt=${newBookedSeatCnt} where bookId = ${bookId}`
     const update = await connectDb.query(updateQuery);
 
-    res.send(update[0])
+    return res.send({bookRes:true})
   }catch(e){
     console.log(e);
     res.send(e)
+    return
   }
 })
 // 관람평 최신으로 가져오기
@@ -181,9 +187,10 @@ app.get("/boardOnTime",async(req,res)=>{
   try{
     const query = `SELECT * FROM heroku_18c5f24897f4cf6.debate where movie = '${movie}' order by created_at DESC limit ${count*10};`;
     const getBoard = await connectDb.query(query);
-    res.send(getBoard[0])
+    return res.send(getBoard[0])
   }catch(e){
     res.send(e)
+    return
   }
 });
 // 관람평 공감으로 가져오기
@@ -192,9 +199,10 @@ app.get("/boardOnFavor",async(req,res)=>{
   try{
     const query = `SELECT * FROM heroku_18c5f24897f4cf6.debate where movie = '${movie}' order by favorit DESC limit ${count*10};`;
     const getBoard = await connectDb.query(query);
-    res.send(getBoard[0])
+    return res.send(getBoard[0])
   }catch(e){
     res.send(e)
+    return
   }
 });
 
@@ -218,11 +226,12 @@ app.post("/appBoard",async (req,res)=> {
 
   const {movie,starPoint,content,nickName} = req.body;
   try{
-    const query = `insert into heroku_18c5f24897f4cf6.debate values(null,'${movie}',${starPoint},'${content}','${nickName}',0,now(),null);`
-    const postBoard = await connectDb.query(query);
+    const query = `insert into heroku_18c5f24897f4cf6.debate values(null,'${movie}',${starPoint},'${content}','${nickName}',0,now(),null,"");`
+    await connectDb.query(query);
     res.send({update:true});
   }catch(e){
-    res.send(e)
+    res.send(e);
+    return
   }
 })
 
@@ -243,9 +252,20 @@ app.post("/like",async (req,res)=> {
     console.log(decoded);
   });
   // 누르기 기능
-  
-  const {id} = req.body;
-  const query = `update heroku_18c5f24897f4cf6.debate set favorit= favorit+1 where id = ${id}`
+  const {id, status,whoLikeThis} = req.body;
+  try{
+		if(status==="like"){
+			const query = `update heroku_18c5f24897f4cf6.debate 
+			set favorit=favorit + 1,whoLikeThis='${whoLikeThis}' where id = ${id};`
+			return res.send({message:"update"})
+		}else if(status==="disLike"){
+			const query = `update heroku_18c5f24897f4cf6.debate  
+			set favorit=favorit -1,whoLikeThis='${whoLikeThis}' where id = ${id};`
+			return res.send({message:"update"})
+		}
+  }catch(e){
+    res.send(e)
+  }
 })
 
 app.listen(port,()=>{
