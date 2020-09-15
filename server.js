@@ -234,7 +234,7 @@ app.post("/appBoard",async (req,res)=> {
 app.post("/like",async (req,res)=> {
   checkToekn(req.headers.authorization);
   // 누르기 기능
-  const {id, status,whoLikeThis} = req.body;
+  const {id, status, whoLikeThis} = req.body;
   try{
 		if(status==="like"){
 			const query = `update heroku_18c5f24897f4cf6.debate 
