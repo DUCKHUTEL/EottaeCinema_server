@@ -3,8 +3,8 @@ const app = express();
 const bodyParser = require("body-parser");
 const jwt = require("jsonwebtoken");
 const config = require("./config/auth.config")
-// const cors = require('cors');
-// app.use(cors());
+const cors = require('cors');
+app.use(cors());
 
 app.use(express.static('public'));
 app.use(express.urlencoded({extended:true}));
