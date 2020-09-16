@@ -121,11 +121,12 @@ app.get("/checkRedunId",async(req,res)=>{
 });
 // 닉네임 중복 체크
 app.get("/checkRedunNickName",async(req,res)=>{
-  const {nickName} = req.query;
+  const {id} = req.query;
   try{
-    const query = `SELECT nickName from heroku_18c5f24897f4cf6.user where nickname = "'${nickName}'";`
+    const query = `SELECT nickName from heroku_18c5f24897f4cf6.user where nickname = "${id}";`
     const checkIdres = await connectDb.query(query);
     const canUseNickName = checkIdres[0].length === 0 ? true:false
+    console.log(query, canUseNickName);
     return res.send(canUseNickName);
   }catch(e){
     res.send(e)
