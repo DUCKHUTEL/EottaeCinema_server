@@ -110,7 +110,7 @@ app.get("/bookMovieData",async(req,res)=> {
 app.get("/checkRedunId",async(req,res)=>{
   const {id} = req.query;
   try{
-    const query = `SELECT id from heroku_18c5f24897f4cf6.user where id = "${id}";`
+    const query = `SELECT id from heroku_18c5f24897f4cf6.user where id = "'${id}'";`
     const checkIdres = await connectDb.query(query);
     const canUseId = checkIdres[0].length === 0 ? true:false
     return res.send(canUseId);
@@ -123,7 +123,7 @@ app.get("/checkRedunId",async(req,res)=>{
 app.get("/checkRedunNickName",async(req,res)=>{
   const {nickName} = req.query;
   try{
-    const query = `SELECT nickname from heroku_18c5f24897f4cf6.user where nickname = "${nickName}";`
+    const query = `SELECT nickName from heroku_18c5f24897f4cf6.user where nickname = "'${nickName}'";`
     const checkIdres = await connectDb.query(query);
     const canUseNickName = checkIdres[0].length === 0 ? true:false
     return res.send(canUseNickName);
