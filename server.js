@@ -195,8 +195,10 @@ app.post("/book",async(req,res)=>{
 app.get("/boardOnTime",async(req,res)=>{
   const {movie,count} = req.query;
   try{
-    const query = `SELECT * FROM heroku_18c5f24897f4cf6.debate where movie = '${movie}' order by created_at DESC limit ${count*10};`;
+    const query = `SELECT *,count(*) FROM heroku_18c5f24897f4cf6.debate where movie = '${movie}' order by created_at DESC limit ${count*10};`;
     const getBoard = await connectDb.query(query);
+    console.log(query)
+    console.log(getBoard[0])
     return res.send(getBoard[0])
   }catch(e){
     res.send(e)
@@ -207,7 +209,7 @@ app.get("/boardOnTime",async(req,res)=>{
 app.get("/boardOnFavor",async(req,res)=>{
   const {movie,count} = req.query;
   try{
-    const query = `SELECT * FROM heroku_18c5f24897f4cf6.debate where movie = '${movie}' order by favorit DESC limit ${count*10};`;
+    const query = `SELECT *,count(*)  FROM heroku_18c5f24897f4cf6.debate where movie = '${movie}' order by favorit DESC limit ${count*10};`;
     const getBoard = await connectDb.query(query);
     return res.send(getBoard[0])
   }catch(e){
