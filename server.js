@@ -110,9 +110,10 @@ app.get("/bookMovieData",async(req,res)=> {
 app.get("/checkRedunId",async(req,res)=>{
   const {id} = req.query;
   try{
-    const query = `SELECT id from heroku_18c5f24897f4cf6.user where id = "'${id}'";`
+    const query = `SELECT id from heroku_18c5f24897f4cf6.user where id = "${id}";`
     const checkIdres = await connectDb.query(query);
     const canUseId = checkIdres[0].length === 0 ? true:false
+    console.log(query, checkIdres[0]);
     return res.send(canUseId);
   }catch(e){
     res.send(e);
