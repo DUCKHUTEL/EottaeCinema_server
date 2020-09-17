@@ -37,10 +37,9 @@ function checkToekn(token){
     }
     console.log(decoded);
   });
+  res.send()
 }
-
 const mysql = require("mysql2/promise");
-
 const connectDb = mysql.createPool({
   host: "us-cdbr-east-02.cleardb.com"
   ,port: 3306
@@ -58,6 +57,7 @@ app.get("/checkToken", async(req,res)=> {
   checkToekn(req.headers.authorization);
   res.send({tokenState:true})
 })
+
 // 영화
 app.get("/movies",async(req,res)=> {
   try{
@@ -181,7 +181,7 @@ app.post("/book",async(req,res)=>{
     // 기존 정보에 좌석 정보 추가하기
 
     const newBookedSeatCnt = bookedSeat.split(";").length;
-    const updateQuery = `update heroku_18c5f24897f4cf6.theaters set bookedSeat=${bookedSeat},
+    const updateQuery = `update heroku_18c5f24897f4cf6.theaters set bookedSeat='${bookedSeat}',
     bookedSeatCnt=${newBookedSeatCnt} where bookId = ${bookId}`
     const update = await connectDb.query(updateQuery);
 
