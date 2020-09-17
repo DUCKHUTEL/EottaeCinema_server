@@ -37,7 +37,6 @@ function checkToekn(token){
     }
     console.log(decoded);
   });
-  res.send()
 }
 const mysql = require("mysql2/promise");
 const connectDb = mysql.createPool({
