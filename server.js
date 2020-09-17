@@ -29,16 +29,24 @@ function checkToekn(res,token){
   };
   // 토큰 유효성 검사
   const reqToken = token.slice(7);
-  
-  jwt.verify(reqToken,config.secret,(err,decoded)=>{
-    if(err){
-      return res.send({
-        tokenState: false
-      });
-    }
-    console.log(decoded);
-  });
+  try{
+    jwt.verify(reqToken,config.secret,(err,decoded)=>{
+      if(err){
+        return res.send({
+          tokenState: false
+        });
+      }
+    console.log("1")
+    });
+    return true;
+  }catch(e){
+    res.send({
+      tokenState: false
+    })
+    return false;
+  }
 }
+
 const mysql = require("mysql2/promise");
 const connectDb = mysql.createPool({
   host: "us-cdbr-east-02.cleardb.com"
@@ -54,7 +62,7 @@ app.get("/",(req,res)=> {
 });
 // 최초 토큰 체크
 app.get("/checkToken", async(req,res)=> {
-  checkToekn(res,req.headers.authorization);
+  if(!checkToekn(res,req.headers.authorization))return;
   res.send({tokenState:true})
 })
 
@@ -172,22 +180,24 @@ app.post("/signIn",async(req,res)=>{
 });
 // 예매하기
 app.post("/book",async(req,res)=>{
-  checkToekn(res,req.headers.authorization);
+  if(!checkToekn(res,req.headers.authorization))return;
   // 예매 정보 추가
   try{
     const {nickName, bookId, bookedSeat, selectedSeat} = req.body;
     const bookQuery = `insert into booktable values(null,"${nickName}",${bookId},'${selectedSeat}',now());`;
     await connectDb.query(bookQuery);
     // 기존 정보에 좌석 정보 추가하기
-
     const newBookedSeatCnt = bookedSeat.split(";").length;
     const updateQuery = `update heroku_18c5f24897f4cf6.theaters set bookedSeat=${bookedSeat},
     bookedSeatCnt=${newBookedSeatCnt} where bookId = ${bookId}`
     const update = await connectDb.query(updateQuery);
 
+    const getBookDataQuery = `select * from heroku_18c5f24897f4cf6.booktable where nickName = ${nickName} and bookedSeat='${selectedSeat}'`;
+    console.log(getBookDataQuery)
+    const getBookData =  await connectDb.query(getBookDataQuery);
+    console.log(getBookData[0][0])
 
-
-    return res.send({bookRes:true})
+    return res.send(getBookData[0][0])
   }catch(e){
     console.log(e);
     res.send(e)
@@ -195,8 +205,8 @@ app.post("/book",async(req,res)=>{
   }
 })
 // 예매 취소
-app.post("/cancelBook",async (req,res)=>{
-  checkToekn(res,req.headers.authorization);
+app.delete("/cancelBook",async (req,res)=>{
+  if(!checkToekn(res,req.headers.authorization))return;
   try{
     const {bookTableId, bookId, bookedSeat} = req.body;
     const getBookSeatQuery = `select bookedSeat from heroku_18c5f24897f4cf6.theaters where bookId = ${bookId}`;
@@ -247,7 +257,7 @@ app.get("/boardOnFavor",async(req,res)=>{
 
 //관람평 쓰기
 app.post("/appBoard",async (req,res)=> {
-  checkToekn(res,req.headers.authorization);
+  if(!checkToekn(res,req.headers.authorization))return;
   const {movie,starPoint,content,nickName} = req.body;
   try{
     const query = `insert into heroku_18c5f24897f4cf6.debate values(null,'${movie}',${starPoint},'${content}','${nickName}',0,now(),null,"");`
@@ -261,7 +271,7 @@ app.post("/appBoard",async (req,res)=> {
 
 // 종아요 누르기
 app.post("/like",async (req,res)=> {
-  checkToekn(res,req.headers.authorization);
+  if(!checkToekn(res,req.headers.authorization))return;
   // 누르기 기능
   const {id, status, whoLikeThis} = req.body;
   try{
@@ -280,7 +290,7 @@ app.post("/like",async (req,res)=> {
 })
 // 게시판 수정
 app.patch("/patchBoard",async (req,res)=> {
-  checkToekn(res,req.headers.authorization); 
+  if(!checkToekn(res,req.headers.authorization))return;
   const {id,starPoint,content} = req.body;
   try{
     const query = `update heroku_18c5f24897f4cf6.debate 
@@ -295,7 +305,7 @@ app.patch("/patchBoard",async (req,res)=> {
 // 게시판 삭제
 app.delete("/deleteBoard",async (req,res)=> {
   
-  checkToekn(res,req.headers.authorization);
+  if(!checkToekn(res,req.headers.authorization))return;
 
   const {id} = req.body;
   try{
