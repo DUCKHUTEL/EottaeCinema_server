@@ -22,7 +22,7 @@ app.use(bodyParser.json());
 
 let port = process.env.PORT || 9000;
 
-function checkToekn(token){
+function checkToekn(res,token){
   if(!token){
     return res.send({message:"no token"})
   };
@@ -53,7 +53,7 @@ app.get("/",(req,res)=> {
 });
 // 최초 토큰 체크
 app.get("/checkToken", async(req,res)=> {
-  checkToekn(req.headers.authorization);
+  checkToekn(res,req.headers.authorization);
   res.send({tokenState:true})
 })
 
@@ -171,7 +171,7 @@ app.post("/signIn",async(req,res)=>{
 });
 // 예매하기
 app.post("/book",async(req,res)=>{
-  checkToekn(req.headers.authorization);
+  checkToekn(res,req.headers.authorization);
   // 예매 정보 추가
   try{
     const {nickName, bookId, bookedSeat, selectedSeat} = req.body;
@@ -180,7 +180,7 @@ app.post("/book",async(req,res)=>{
     // 기존 정보에 좌석 정보 추가하기
 
     const newBookedSeatCnt = bookedSeat.split(";").length;
-    const updateQuery = `update heroku_18c5f24897f4cf6.theaters set bookedSeat='${bookedSeat}',
+    const updateQuery = `update heroku_18c5f24897f4cf6.theaters set bookedSeat=${bookedSeat},
     bookedSeatCnt=${newBookedSeatCnt} where bookId = ${bookId}`
     const update = await connectDb.query(updateQuery);
 
@@ -189,6 +189,30 @@ app.post("/book",async(req,res)=>{
     console.log(e);
     res.send(e)
     return
+  }
+})
+// 예매 취소
+app.post("/cancelBook",async (req,res)=>{
+  checkToekn(res,req.headers.authorization);
+  try{
+    const {bookTableId, bookId, bookedSeat} = req.body;
+    const getBookSeatQuery = `select bookedSeat from heroku_18c5f24897f4cf6.theaters where bookId = ${bookId}`;
+    const getBookSeat = await connectDb.query(getBookSeatQuery);
+    const getBookSeatArray = getBookSeat[0][0].bookedSeat.split(";");
+    const bookedSeatArray = bookedSeat.split(";");
+    const setSeat = getBookSeatArray.filter(bookedSeat => {
+      return !bookedSeatArray.includes(bookedSeat)
+    }).join(";");
+
+    const setBookSeatQuery = `update heroku_18c5f24897f4cf6.theaters set bookedSeat= '${setSeat}' where bookId = ${bookId};`
+    const setBookSeat = await connectDb.query(setBookSeatQuery);
+    console.log(setBookSeat)
+    const deleteBookQuery = `delete from heroku_18c5f24897f4cf6.booktable where id = ${bookTableId}`
+    const deleteBook = await connectDb.query(deleteBookQuery);
+    console.log(deleteBook)
+    res.send({state: true})
+  }catch(e){
+    res.send(e)
   }
 })
 // 관람평 최신으로 가져오기
@@ -220,7 +244,7 @@ app.get("/boardOnFavor",async(req,res)=>{
 
 //관람평 쓰기
 app.post("/appBoard",async (req,res)=> {
-  checkToekn(req.headers.authorization);
+  checkToekn(res,req.headers.authorization);
   const {movie,starPoint,content,nickName} = req.body;
   try{
     const query = `insert into heroku_18c5f24897f4cf6.debate values(null,'${movie}',${starPoint},'${content}','${nickName}',0,now(),null,"");`
@@ -234,7 +258,7 @@ app.post("/appBoard",async (req,res)=> {
 
 // 종아요 누르기
 app.post("/like",async (req,res)=> {
-  checkToekn(req.headers.authorization);
+  checkToekn(res,req.headers.authorization);
   // 누르기 기능
   const {id, status, whoLikeThis} = req.body;
   try{
@@ -253,7 +277,7 @@ app.post("/like",async (req,res)=> {
 })
 // 게시판 수정
 app.patch("/patchBoard",async (req,res)=> {
-  checkToekn(req.headers.authorization); 
+  checkToekn(res,req.headers.authorization); 
   const {id,starPoint,content} = req.body;
   try{
     const query = `update heroku_18c5f24897f4cf6.debate 
@@ -268,7 +292,7 @@ app.patch("/patchBoard",async (req,res)=> {
 // 게시판 삭제
 app.delete("/deleteBoard",async (req,res)=> {
   
-  checkToekn(req.headers.authorization);
+  checkToekn(res,req.headers.authorization);
 
   const {id} = req.body;
   try{
