@@ -3,6 +3,7 @@ const app = express();
 const bodyParser = require("body-parser");
 const jwt = require("jsonwebtoken");
 const config = require("./config/auth.config")
+const Axios = require("axios");
 const cors = require('cors');
 app.use(cors());
 
@@ -184,6 +185,8 @@ app.post("/book",async(req,res)=>{
     bookedSeatCnt=${newBookedSeatCnt} where bookId = ${bookId}`
     const update = await connectDb.query(updateQuery);
 
+
+
     return res.send({bookRes:true})
   }catch(e){
     console.log(e);
@@ -299,6 +302,16 @@ app.delete("/deleteBoard",async (req,res)=> {
 		const query = `delete from heroku_18c5f24897f4cf6.debate where id=${id}`;
 		await connectDb.query(query);
 		res.send({update:true});
+  }catch(e){
+    res.send(e)
+  }
+})
+//  영화 데이터 api요청
+app.get("/detail",async (req,res)=>{
+  const {title} = req.query;
+  try{
+  const detailData = await Axios.get(encodeURI(`http://api.koreafilm.or.kr/openapi-data2/wisenut/search_api/search_json2.jsp?collection=kmdb_new2&ServiceKey=17NY1ZR61M5AG3S48QR8&title=${title}`));
+    res.send(detailData.data);
   }catch(e){
     res.send(e)
   }
