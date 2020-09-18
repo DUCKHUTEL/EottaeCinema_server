@@ -184,15 +184,18 @@ app.post("/book",async(req,res)=>{
   // 예매 정보 추가
   try{
     const {nickName, bookId, bookedSeat, selectedSeat} = req.body;
-    const bookQuery = `insert into booktable values(null,"${nickName}",${bookId},'${selectedSeat}',now());`;
+    const bookQuery = `insert into booktable values(null,'${nickName}',${bookId},'${selectedSeat}',now());`;
+    console.log(bookQuery)
     await connectDb.query(bookQuery);
     // 기존 정보에 좌석 정보 추가하기
     const newBookedSeatCnt = bookedSeat.split(";").length;
+
     const updateQuery = `update heroku_18c5f24897f4cf6.theaters set bookedSeat=${bookedSeat},
     bookedSeatCnt=${newBookedSeatCnt} where bookId = ${bookId}`
-    const update = await connectDb.query(updateQuery);
+    
+    await connectDb.query(updateQuery);
 
-    const getBookDataQuery = `select * from heroku_18c5f24897f4cf6.booktable where nickName = ${nickName} and bookedSeat='${selectedSeat}'`;
+    const getBookDataQuery = `select * from heroku_18c5f24897f4cf6.booktable where nickName = '${nickName}' and bookedSeat='${selectedSeat}'`;
     console.log(getBookDataQuery)
     const getBookData =  await connectDb.query(getBookDataQuery);
     console.log(getBookData[0][0])
