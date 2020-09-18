@@ -236,7 +236,6 @@ app.get("/boardOnTime",async(req,res)=>{
     
     const getTotalCntQuery = `select count(*) as total from heroku_18c5f24897f4cf6.debate where movie = '${movie}'`
     const getTotalCnt = await connectDb.query(getTotalCntQuery);
-    console.log(getBoard[0], getTotalCnt[0])
     return res.send({
       datas:getBoard[0],
       total:getTotalCnt[0][0].total
@@ -287,11 +286,13 @@ app.post("/like",async (req,res)=> {
   try{
 		if(status==="like"){
 			const query = `update heroku_18c5f24897f4cf6.debate 
-			set favorit=favorit + 1,whoLikeThis='${whoLikeThis}' where id = ${id};`
+      set favorit=favorit + 1,whoLikeThis='${whoLikeThis}' where id = ${id};`
+      await connectDb.query(query)
 			return res.send({message:"update"})
 		}else if(status==="disLike"){
-			const query = `update heroku_18c5f24897f4cf6.debate  
+      const query = `update heroku_18c5f24897f4cf6.debate  
 			set favorit=favorit -1,whoLikeThis='${whoLikeThis}' where id = ${id};`
+      await connectDb.query(query)
 			return res.send({message:"update"})
 		}
   }catch(e){
