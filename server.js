@@ -287,19 +287,34 @@ app.post("/appBoard",async (req,res)=> {
 app.post("/like",async (req,res)=> {
   if(!checkToekn(res,req.headers.authorization))return;
   // 누르기 기능
-  const {id, status, whoLikeThis} = req.body;
+  // const {id, status, whoLikeThis} = req.body;
+  const {id, nickName} = req.body;
   try{
-		if(status==="like"){
-			const query = `update heroku_18c5f24897f4cf6.debate 
-      set favorit=favorit + 1,whoLikeThis='${whoLikeThis}' where id = ${id};`
+		// if(status==="like"){
+		// 	const query = `update heroku_18c5f24897f4cf6.debate 
+    //   set favorit=favorit + 1,whoLikeThis='${whoLikeThis}' where id = ${id};`
+    //   await connectDb.query(query)
+		// 	return res.send({message:"update"})
+		// }else if(status==="disLike"){
+
+    // 	return res.send({message:"update"})
+    const searchQuery = `SELECT whoLikeThis FROM heroku_18c5f24897f4cf6.debate where id = ${id}`
+    const search =await connectDb.query(searchQuery);
+    const searchRes = search[0][0].whoLikeThis.split(";")
+    if(searchRes.includes(nickName)){
+      const idx = searchRes.indexOf(nickName);
+      searchRes.splice(idx, 1);
+      const newLikePeople = searchRes.join(";");
+      const query = `update heroku_18c5f24897f4cf6.debate set favorit=favorit -1,whoLikeThis='${newLikePeople}' where id = ${id};`
+      await connectDb.query(query);
+      return res.send({message:"subtract person"})
+    }else{
+      searchRes.push(nickName);
+      const newLikePeople = searchRes.join(";")
+      const query = `update heroku_18c5f24897f4cf6.debate set favorit=favorit + 1,whoLikeThis='${newLikePeople}' where id = ${id};`
       await connectDb.query(query)
-			return res.send({message:"update"})
-		}else if(status==="disLike"){
-      const query = `update heroku_18c5f24897f4cf6.debate  
-			set favorit=favorit -1,whoLikeThis='${whoLikeThis}' where id = ${id};`
-      await connectDb.query(query)
-			return res.send({message:"update"})
-		}
+			return res.send({message:"add person"})
+    }
   }catch(e){
     res.send(e)
   }
