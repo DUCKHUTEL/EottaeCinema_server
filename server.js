@@ -36,7 +36,6 @@ function checkToekn(res,token){
           tokenState: false
         });
       }
-    console.log("1")
     });
     return true;
   }catch(e){
@@ -168,7 +167,6 @@ app.post("/signIn",async(req,res)=>{
     const token = jwt.sign({nickName:findIdData[0][0].nickName},config.secret,{
       expiresIn:86400
     });
-    console.log("1")
     return res.send({
       nickName:findIdData[0][0].nickName,
       accessToken:token
@@ -287,17 +285,9 @@ app.post("/appBoard",async (req,res)=> {
 app.post("/like",async (req,res)=> {
   if(!checkToekn(res,req.headers.authorization))return;
   // 누르기 기능
-  // const {id, status, whoLikeThis} = req.body;
   const {id, nickName} = req.body;
   try{
-		// if(status==="like"){
-		// 	const query = `update heroku_18c5f24897f4cf6.debate 
-    //   set favorit=favorit + 1,whoLikeThis='${whoLikeThis}' where id = ${id};`
-    //   await connectDb.query(query)
-		// 	return res.send({message:"update"})
-		// }else if(status==="disLike"){
 
-    // 	return res.send({message:"update"})
     const searchQuery = `SELECT whoLikeThis FROM heroku_18c5f24897f4cf6.debate where id = ${id}`
     const search =await connectDb.query(searchQuery);
     const searchRes = search[0][0].whoLikeThis.split(";")
@@ -324,8 +314,7 @@ app.patch("/patchBoard",async (req,res)=> {
   if(!checkToekn(res,req.headers.authorization))return;
   const {id,starPoint,content} = req.body;
   try{
-    const query = `update heroku_18c5f24897f4cf6.debate 
-			set content='${content}'star=${starPoint} where id = ${id};`
+    const query = `update heroku_18c5f24897f4cf6.debate set content='${content}', star=${starPoint} where id = ${id};`
     await connectDb.query(query);
     return res.send({update:true});
   }catch(e){
@@ -337,7 +326,6 @@ app.patch("/patchBoard",async (req,res)=> {
 app.delete("/deleteBoard",async (req,res)=> {
   
   if(!checkToekn(res,req.headers.authorization))return;
-
   const {id} = req.body;
   try{
 		const query = `delete from heroku_18c5f24897f4cf6.debate where id=${id}`;
@@ -361,4 +349,3 @@ app.get("/detail",async (req,res)=>{
 app.listen(port,()=>{
     console.log(`app on ${port}`)
 });
-
