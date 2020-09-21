@@ -270,7 +270,7 @@ app.post("/appBoard",async (req,res)=> {
     const checkBookRecodeQuery = `SELECT * FROM heroku_18c5f24897f4cf6.booktable where nickname = '${nickName}';`
     const checkRes =  await connectDb.query(checkBookRecodeQuery);
     console.log(checkRes[0]);
-    if(checkRes[0].length === 0) return res.send({message:"관람평은 예매기록이 있는 고객만 쓰실 수 있습니다."})
+    if(checkRes[0].length === 0) return res.send({update:false})
 
     const query = `insert into heroku_18c5f24897f4cf6.debate values(null,'${movie}',${starPoint},'${content}','${nickName}',0,now(),null,"");`
     await connectDb.query(query);
@@ -324,7 +324,7 @@ app.patch("/patchBoard",async (req,res)=> {
 })
 // 게시판 삭제
 app.delete("/deleteBoard",async (req,res)=> {
-  
+  console.log(req.headers.authorization);
   if(!checkToekn(res,req.headers.authorization))return;
   const {id} = req.body;
   try{
