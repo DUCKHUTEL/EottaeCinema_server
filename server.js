@@ -267,9 +267,8 @@ app.post("/appBoard",async (req,res)=> {
   if(!checkToekn(res,req.headers.authorization))return;
   const {movie,starPoint,content,nickName} = req.body;
   try{
-    const checkBookRecodeQuery = `SELECT * FROM heroku_18c5f24897f4cf6.booktable where nickname = '${nickName}';`
+    const checkBookRecodeQuery = `SELECT e.nickname, d.movieTitle FROM heroku_18c5f24897f4cf6.booktable e inner join heroku_18c5f24897f4cf6.theaters d on e.bookid = d.bookId where nickname='${nickName}' and movieTitle='${movie}';`
     const checkRes =  await connectDb.query(checkBookRecodeQuery);
-    console.log(checkRes[0]);
     if(checkRes[0].length === 0) return res.send({update:false})
 
     const query = `insert into heroku_18c5f24897f4cf6.debate values(null,'${movie}',${starPoint},'${content}','${nickName}',0,now(),null,"");`
