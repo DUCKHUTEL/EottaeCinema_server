@@ -301,7 +301,7 @@ Axios.post("https://eottae-cinema.herokuapp.com/appBoard",
 ### 4-3 수정하기
 
 ```jsx
-app.patch("/patchBoard",async (req,res)=> {
+app.patch("/Board",async (req,res)=> {
   
   // 토큰 존재 확인
   if(!req.headers.authorization){
@@ -343,7 +343,7 @@ Axios.patch("https://eottae-cinema.herokuapp.com/patchBoard",
 ### 4-4 좋아요 버튼 클릭
 
 ```jsx
-app.patch("/patchStar",async (req,res)=> {
+app.patch("/Star",async (req,res)=> {
   
   // 토큰 존재 확인
   if(!req.headers.authorization){
@@ -403,7 +403,7 @@ whoLikeThis.split(";").filter({nick}=> nick!=="생수").join(";");
 ### 4-5 삭제
 
 ```jsx
-app.delete("/deleteBoard",async (req,res)=> {
+app.delete("/Board",async (req,res)=> {
   
   checkToekn(req.headers.authorization);
 
