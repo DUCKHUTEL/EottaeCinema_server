@@ -4,24 +4,32 @@ const bodyParser = require("body-parser");
 const jwt = require("jsonwebtoken");
 const config = require("./config/auth.config")
 const Axios = require("axios");
+require("dotenv").config();
 const cors = require('cors');
 app.use(cors());
-
 app.use(express.static('public'));
 app.use(express.urlencoded({extended:true}));
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
-// app.use(function(req, res, next) {
-//   res.header("Access-Control-Allow-Origin", '*');
-//   res.header("Access-Control-Allow-Credentials", true);
-//   res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
-//   res.header("Access-Control-Allow-Headers", 'Origin,X-Requested-With,Content-Type,Accept,content-type,application/json');
-//   next();
-// });
+const host = process.env.host;
+const user = process.env.user;
+const password = process.env.password;
+const database = process.env.database;
 
 let port = process.env.PORT || 9000;
+
+const mysql = require("mysql2/promise");
+
+const connectDb = mysql.createPool({
+  host: host
+  ,port: 3306
+  ,user : user
+  ,password : password
+  ,database : database
+  ,connectionLimit: 10
+});
 
 function checkToekn(res,token){
   if(!token){
@@ -46,19 +54,10 @@ function checkToekn(res,token){
   }
 }
 
-const mysql = require("mysql2/promise");
-const connectDb = mysql.createPool({
-  host: "us-cdbr-east-02.cleardb.com"
-  ,port: 3306
-  ,user : "ba26f111c136d8"
-  ,password : "efa96b0e"
-  ,database : "heroku_18c5f24897f4cf6"
-  ,connectionLimit: 10
-})
-
 app.get("/",(req,res)=> {
     res.send("데모 서버 입니다.")
 });
+
 // 최초 토큰 체크
 app.get("/checkToken", async(req,res)=> {
   if(!checkToekn(res,req.headers.authorization))return;
@@ -141,12 +140,12 @@ app.get("/checkRedunNickName",async(req,res)=>{
     return
   }
 });
-// 추가하기
+// 회원가입
 app.post("/signUp",async(req,res)=>{
   try{
     const {id,password,nickName} = req.body;
     const query = `INSERT INTO heroku_18c5f24897f4cf6.user values("${nickName}","${password}","${id}");`;
-    await connectDb.query(query);
+    const a = await connectDb.query(query);
     return res.send({status:true});
   }catch(e){
     res.send(e);
@@ -157,13 +156,18 @@ app.post("/signUp",async(req,res)=>{
 app.post("/signIn",async(req,res)=>{
   try{
     const {id,password} = req.body;
-    const query = `select * from heroku_18c5f24897f4cf6.user where id="${id}" and password="${password}";`;
+    const query = `select * from heroku_18c5f24897f4cf6.user
+                   where id="${id}"
+                   and password="${password}";`;
     const findIdData = await connectDb.query(query);
 
+    // 로그인 실패
     if(findIdData[0].length === 0){
       res.send({loginStatus:false})
       return
-    }          
+    }
+    //findIdData = [[{nickName:생수,}]]
+    // 로그인 성공
     const token = jwt.sign({nickName:findIdData[0][0].nickName},config.secret,{
       expiresIn:86400
     });
@@ -289,7 +293,7 @@ app.post("/like",async (req,res)=> {
 
     const searchQuery = `SELECT whoLikeThis FROM heroku_18c5f24897f4cf6.debate where id = ${id}`
     const search =await connectDb.query(searchQuery);
-    const searchRes = search[0][0].whoLikeThis.split(";")
+    const searchRes = search[0][0].whoLikeThis.split(";");
     if(searchRes.includes(nickName)){
       const idx = searchRes.indexOf(nickName);
       searchRes.splice(idx, 1);
@@ -308,6 +312,7 @@ app.post("/like",async (req,res)=> {
     res.send(e)
   }
 })
+
 // 게시판 수정
 app.patch("/patchBoard",async (req,res)=> {
   if(!checkToekn(res,req.headers.authorization))return;
@@ -346,5 +351,6 @@ app.get("/detail",async (req,res)=>{
 })
 
 app.listen(port,()=>{
+  // localhost:8000 > url
     console.log(`app on ${port}`)
 });
